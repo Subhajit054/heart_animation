@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>3D Magical Heart</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #0a0a0a;
+            overflow: hidden;
+            perspective: 1000px;
+        }
+
+        .heart-container {
+            position: relative;
+            transform-style: preserve-3d;
+            animation: float3D 8s ease-in-out infinite;
+        }
+
+        .heart-3d {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            transform-style: preserve-3d;
+            animation: heartbeat 1.2s infinite, rotate3D 20s linear infinite;
+            cursor: pointer;
+        }
+
+        .heart-layer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+        }
+
+        .heart-layer::before,
+        .heart-layer::after {
+            content: '';
+            position: absolute;
+            width: 110px;
+            height: 180px;
+            border-radius: 110px 110px 0 0;
+            background: linear-gradient(45deg, 
+                rgba(255,50,50,0.9) 0%, 
+                rgba(255,100,100,0.7) 100%);
+            box-shadow: 0 0 30px rgba(255,80,80,0.6);
+            transform-origin: 50% 100%;
+        }
+
+        .heart-layer::before {
+            left: 110px;
+            transform: rotate(-45deg) translateZ(var(--tz));
+        }
+
+        .heart-layer::after {
+            left: 0;
+            transform: rotate(45deg) translateZ(var(--tz));
+        }
+
+        .glow-3d {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle at center, 
+                rgba(255,80,80,0.4) 0%, 
+                rgba(255,30,30,0) 70%);
+            filter: blur(40px);
+            animation: pulse3D 4s ease-in-out infinite;
+            transform: translateZ(-50px);
+        }
+
+        .particle-3d {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            transform-style: preserve-3d;
+            animation: particleFloat 3s ease-out forwards;
+        }
+
+        .light-beam {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, 
+                rgba(255,100,100,0.1) 0%, 
+                rgba(255,50,50,0.05) 50%, 
+                transparent 100%);
+            animation: lightRotate 20s linear infinite;
+            transform: translateZ(-100px);
+        }
+
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            15% { transform: scale(1.3); }
+            30% { transform: scale(1); }
+            45% { transform: scale(1.15); }
+            60% { transform: scale(1); }
+        }
+
+        @keyframes rotate3D {
+            0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+            100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+        }
+
+        @keyframes pulse3D {
+            0%, 100% { transform: scale(0.8) translateZ(-50px); opacity: 0.6; }
+            50% { transform: scale(1.4) translateZ(-50px); opacity: 0.3; }
+        }
+
+        @keyframes float3D {
+            0%, 100% { transform: translateY(0px) rotateX(5deg) rotateY(5deg); }
+            50% { transform: translateY(-20px) rotateX(-5deg) rotateY(-5deg); }
+        }
+
+        @keyframes particleFloat {
+            0% { transform: translate3d(0,0,0) scale(1); opacity: 1; }
+            100% { transform: translate3d(var(--tx), var(--ty), var(--tz)) scale(0); opacity: 0; }
+        }
+
+        @keyframes lightRotate {
+            0% { transform: rotate(0deg) translateZ(-100px); }
+            100% { transform: rotate(360deg) translateZ(-100px); }
+        }
+
+        .dynamic-shadow {
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, 
+                rgba(255,50,50,0.4) 0%, 
+                transparent 70%);
+            filter: blur(20px);
+            transform: translateZ(-150px);
+            animation: shadowMove 8s ease-in-out infinite;
+        }
+
+        @keyframes shadowMove {
+            0%, 100% { transform: translateZ(-150px) rotate(0deg); }
+            50% { transform: translateZ(-150px) rotate(180deg); }
+        }
+
+        .ambient-light {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, 
+                rgba(255,100,100,0.1) 0%, 
+                transparent 60%);
+            pointer-events: none;
+            animation: ambientPulse 8s ease-in-out infinite;
+        }
+
+        @keyframes ambientPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.1; }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="ambient-light"></div>
+    <div class="heart-container">
+        <div class="dynamic-shadow"></div>
+        <div class="light-beam"></div>
+        <div class="glow-3d"></div>
+        <div class="heart-3d">
+            <div class="heart-layer" style="--tz: 0px"></div>
+            <div class="heart-layer" style="--tz: 10px"></div>
+            <div class="heart-layer" style="--tz: 20px"></div>
+            <div class="heart-layer" style="--tz: 30px"></div>
+        </div>
+    </div>
+
+    <script>
+        const heart3D = document.querySelector('.heart-3d');
+        const container = document.querySelector('.heart-container');
+
+        // Create 3D particles
+        function create3DParticle(x, y) {
+            const particle = document.createElement('div');
+            particle.className = 'particle-3d';
+            
+            const size = Math.random() * 4 + 2;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            
+            particle.style.left = `${x}px`;
+            particle.style.top = `${y}px`;
+            
+            particle.style.setProperty('--tx', `${(Math.random() - 0.5) * 200}px`);
+            particle.style.setProperty('--ty', `${(Math.random() - 0.5) * 200}px`);
+            particle.style.setProperty('--tz', `${Math.random() * 100}px`);
+            
+            particle.style.backgroundColor = `hsl(${Math.random() * 360}, 70%, 60%)`;
+            
+            container.appendChild(particle);
+            
+            setTimeout(() => {
+                particle.remove();
+            }, 3000);
+        }
+
+        // Mouse interaction
+        let isHovering = false;
+        
+        heart3D.addEventListener('mousemove', (e) => {
+            const rect = heart3D.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            for(let i = 0; i < 5; i++) {
+                setTimeout(() => create3DParticle(x, y), i * 50);
+            }
+            
+            // Parallax effect
+            const rotateX = -(e.clientY - window.innerHeight/2) / 20;
+            const rotateY = (e.clientX - window.innerWidth/2) / 20;
+            heart3D.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        });
+
+        heart3D.addEventListener('mouseleave', () => {
+            heart3D.style.transform = '';
+        });
+
+        // Dynamic color change
+        let hue = 0;
+        setInterval(() => {
+            hue = (hue + 0.5) % 360;
+            document.documentElement.style.setProperty('--heart-hue', hue);
+        }, 50);
+
+        // Add depth effect on scroll
+        window.addEventListener('wheel', (e) => {
+            const delta = Math.sign(e.deltaY) * 10;
+            const currentZ = parseFloat(getComputedStyle(container).translateZ) || 0;
+            container.style.transform = `translateZ(${currentZ + delta}px)`;
+        });
+    </script>
+</body>
+</html>
